@@ -3793,35 +3793,77 @@ Main.Search.Input:GetPropertyChangedSignal('Text'):Connect(function()
 	local searchText = string.lower(Main.Search.Input.Text)
 	local isSearching = #searchText > 0
 	
-	for _, page in ipairs(Elements:GetChildren()) do
-		if page.ClassName == "ScrollingFrame" and page.Name ~= "Template" then
-			if isSearching then
-				if not page:FindFirstChild('SearchTitle-fsefsefesfsefesfesfThanks') then
-					local searchTitle = Elements.Template.SectionTitle:Clone()
-					searchTitle.Parent = page
-					searchTitle.Name = 'SearchTitle-fsefsefesfsefesfesfThanks'
-					searchTitle.LayoutOrder = -100
-					searchTitle.Title.Text = "Results from '"..page.Name.."'"
-					searchTitle.Visible = true
-				end
-			else
-				local searchTitle = page:FindFirstChild('SearchTitle-fsefsefesfsefesfesfThanks')
-				if searchTitle then
-					searchTitle:Destroy()
-				end
+	local searchResultsPage = Elements:FindFirstChild("SearchResultsPage")
+	if not searchResultsPage then
+		searchResultsPage = Elements.Template:Clone()
+		searchResultsPage.Name = "SearchResultsPage"
+		searchResultsPage.Parent = Elements
+	end
+
+	for _, element in ipairs(searchResultsPage:GetChildren()) do
+		if element.ClassName ~= "UIListLayout" and element.Name ~= "Placeholder" and element.Name ~= "SearchTitle-fsefsefesfsefesfesfThanks" then
+			local origParent = element:GetAttribute("OriginalParent")
+			if origParent and Elements:FindFirstChild(origParent) then
+				element.Parent = Elements:FindFirstChild(origParent)
 			end
-			
-			for _, element in ipairs(page:GetChildren()) do
-				if element.ClassName ~= 'UIListLayout' and element.Name ~= 'Placeholder' and element.Name ~= 'SearchTitle-fsefsefesfsefesfesfThanks' then
-					if element.Name == 'SectionTitle' then
-						element.Visible = not isSearching
-					else
-						if isSearching then
-							element.Visible = string.find(string.lower(element.Name), searchText, 1, true) ~= nil
-						else
+		end
+	end
+
+	if isSearching then
+		if not Main:GetAttribute("PreSearchPage") and Elements.UIPageLayout.CurrentPage.Name ~= "SearchResultsPage" then
+			Main:SetAttribute("PreSearchPage", Elements.UIPageLayout.CurrentPage.Name)
+		end
+		
+		Elements.UIPageLayout:JumpTo(searchResultsPage)
+		
+		if not searchResultsPage:FindFirstChild('SearchTitle-fsefsefesfsefesfesfThanks') then
+			local searchTitle = Elements.Template.SectionTitle:Clone()
+			searchTitle.Parent = searchResultsPage
+			searchTitle.Name = 'SearchTitle-fsefsefesfsefesfesfThanks'
+			searchTitle.LayoutOrder = -100
+			searchTitle.Title.Text = "Search Results"
+			searchTitle.Visible = true
+		end
+		
+		for _, page in ipairs(Elements:GetChildren()) do
+			if page.ClassName == "ScrollingFrame" and page.Name ~= "Template" and page.Name ~= "SearchResultsPage" then
+				local i = 1
+				for _, element in ipairs(page:GetChildren()) do
+					if element.ClassName ~= 'UIListLayout' and element.Name ~= 'Placeholder' then
+						if not element:GetAttribute("OriginalLayoutOrder") then
+							element:SetAttribute("OriginalLayoutOrder", i)
+							element.LayoutOrder = i
+						end
+						
+						if not element:GetAttribute("OriginalParent") then
+							element:SetAttribute("OriginalParent", page.Name)
+						end
+
+						if element.Name ~= 'SectionTitle' and string.find(string.lower(element.Name), searchText, 1, true) then
+							element.Parent = searchResultsPage
 							element.Visible = true
 						end
 					end
+					i = i + 1
+				end
+			end
+		end
+	else
+		local searchTitle = searchResultsPage:FindFirstChild('SearchTitle-fsefsefesfsefesfesfThanks')
+		if searchTitle then
+			searchTitle:Destroy()
+		end
+		
+		local preSearch = Main:GetAttribute("PreSearchPage")
+		if preSearch and Elements:FindFirstChild(preSearch) then
+			Elements.UIPageLayout:JumpTo(Elements:FindFirstChild(preSearch))
+		end
+		Main:SetAttribute("PreSearchPage", nil)
+		
+		for _, page in ipairs(Elements:GetChildren()) do
+			if page.ClassName == "ScrollingFrame" and page.Name ~= "Template" and page.Name ~= "SearchResultsPage" then
+				for _, element in ipairs(page:GetChildren()) do
+					element.Visible = true
 				end
 			end
 		end
