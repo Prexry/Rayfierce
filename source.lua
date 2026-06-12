@@ -99,6 +99,7 @@ if secureMode then
 	assert = function(v, ...) return _assert(v) end
 end
 
+local RayfieldLibrary
 local secureWarnings = {}
 local customAssets = {}
 
@@ -326,16 +327,34 @@ local function AddUniversalMethods(ElementValue, UIElement)
 	end
 	function ElementValue:Lock(reason)
 		if UIElement then
-			if UIElement:FindFirstChild("Interact") then
-				UIElement.Interact.Visible = false
+			local blocker = UIElement:FindFirstChild("LockBlocker")
+			if not blocker then
+				blocker = Instance.new("TextButton")
+				blocker.Name = "LockBlocker"
+				blocker.Size = UDim2.new(1, 0, 1, 0)
+				blocker.BackgroundTransparency = 1
+				blocker.Text = ""
+				blocker.ZIndex = 99999
+				blocker.Parent = UIElement
+				
+				blocker.MouseButton1Click:Connect(function()
+					if RayfieldLibrary and RayfieldLibrary.Notify then
+						RayfieldLibrary:Notify({
+							Title = "Locked Feature",
+							Content = reason or "This feature is currently locked.",
+							Duration = 5,
+						})
+					end
+				end)
 			end
 			pcall(function() TweenService:Create(UIElement, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.5}):Play() end)
 		end
 	end
 	function ElementValue:Unlock()
 		if UIElement then
-			if UIElement:FindFirstChild("Interact") then
-				UIElement.Interact.Visible = true
+			local blocker = UIElement:FindFirstChild("LockBlocker")
+			if blocker then
+				blocker:Destroy()
 			end
 			pcall(function() TweenService:Create(UIElement, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0}):Play() end)
 		end
@@ -343,7 +362,7 @@ local function AddUniversalMethods(ElementValue, UIElement)
 	return ElementValue
 end
 
-local RayfieldLibrary = {
+RayfieldLibrary = {
 	Flags = {},
 	Theme = {
 		Default = {
