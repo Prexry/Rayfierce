@@ -325,7 +325,7 @@ local function AddUniversalMethods(ElementValue, UIElement)
 	function ElementValue:Visible(bool)
 		if UIElement then UIElement.Visible = bool end
 	end
-	function ElementValue:Lock(reason)
+	function ElementValue:Lock(reason, icon)
 		if UIElement then
 			local blocker = UIElement:FindFirstChild("LockBlocker")
 			if not blocker then
@@ -336,13 +336,14 @@ local function AddUniversalMethods(ElementValue, UIElement)
 				blocker.Text = ""
 				blocker.ZIndex = 99999
 				blocker.Parent = UIElement
-				
+
 				blocker.MouseButton1Click:Connect(function()
 					if RayfieldLibrary and RayfieldLibrary.Notify then
 						RayfieldLibrary:Notify({
 							Title = "Locked Feature",
 							Content = reason or "This feature is currently locked.",
 							Duration = 5,
+							Image = "lock"
 						})
 					end
 				end)
@@ -756,7 +757,7 @@ local function GetLocalAsset(url)
 	if success and result and result[1] then
 		return result
 	end
-	
+
 	-- Fallback for Solara/Xeno (no game:GetObjects)
 	local assetId = string.match(url, "rbxassetid://(%d+)") or string.match(url, "%d+")
 	if assetId then
@@ -1103,7 +1104,7 @@ end
 local function makeDraggable(object, dragObject, enableTaptic, tapticOffset)
 	local dragDetector = Instance.new("UIDragDetector")
 	dragDetector.Parent = object
-	
+
 	if dragBar and enableTaptic then
 		dragBar.MouseEnter:Connect(function()
 			if not Hidden then
@@ -1117,14 +1118,14 @@ local function makeDraggable(object, dragObject, enableTaptic, tapticOffset)
 			end
 		end)
 	end
-	
+
 	if dragObject and enableTaptic then
 		dragDetector.DragStart:Connect(function()
 			if not Hidden then
 				TweenService:Create(dragBarCosmetic, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 110, 0, 4), BackgroundTransparency = 0}):Play()
 			end
 		end)
-		
+
 		dragDetector.DragEnd:Connect(function()
 			if not Hidden then
 				TweenService:Create(dragBarCosmetic, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 100, 0, 4), BackgroundTransparency = 0.7}):Play()
@@ -1275,7 +1276,7 @@ function RayfieldLibrary:Notify(data) -- action e.g open messages
 			actionsFrame.Position = UDim2.new(0, 10, 1, -35)
 			actionsFrame.AnchorPoint = Vector2.new(0, 1)
 			actionsFrame.Parent = newNotification
-			
+
 			local layout = Instance.new("UIListLayout")
 			layout.FillDirection = Enum.FillDirection.Horizontal
 			layout.HorizontalAlignment = Enum.HorizontalAlignment.Right
@@ -1293,7 +1294,7 @@ function RayfieldLibrary:Notify(data) -- action e.g open messages
 				btn.TextSize = 14
 				Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
 				btn.Parent = actionsFrame
-				
+
 				btn.MouseButton1Click:Connect(function()
 					pcall(actionData.Callback)
 				end)
@@ -1792,7 +1793,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 	LoadingFrame.Subtitle.Text = Settings.LoadingSubtitle or "Interface Suite"
 
 	if Settings.LoadingTitle ~= "Rayfield Interface Suite" then
-		LoadingFrame.Version.Text = "Rayfield UI"
+		LoadingFrame.Version.Text = "Rayfierce"
 	end
 
 	if Settings.Icon and Settings.Icon ~= 0 and Topbar:FindFirstChild('Icon') then
@@ -2234,7 +2235,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			Button.BackgroundTransparency = 1
 			Button.UIStroke.Transparency = 1
 			Button.Title.TextTransparency = 1
-			
+
 			if ButtonSettings.Interact then
 				Button.ElementIndicator.Text = ButtonSettings.Interact
 			end
@@ -3147,14 +3148,14 @@ function RayfieldLibrary:CreateWindow(Settings)
 				Dropdown.Toggle.ImageColor3 = SelectedTheme.TextColor
 				TweenService:Create(Dropdown, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {BackgroundColor3 = SelectedTheme.ElementBackground}):Play()
 			end)
-			
+
 			function DropdownSettings:Add(option: string)
 				if not table.find(DropdownSettings.Options, option) then
 					table.insert(DropdownSettings.Options, option)
 					DropdownSettings:Refresh(DropdownSettings.Options)
 				end
 			end
-			
+
 			function DropdownSettings:Remove(option: string)
 				local index = table.find(DropdownSettings.Options, option)
 				if index then
@@ -3811,7 +3812,7 @@ end)
 Main.Search.Input:GetPropertyChangedSignal('Text'):Connect(function()
 	local searchText = string.lower(Main.Search.Input.Text)
 	local isSearching = #searchText > 0
-	
+
 	local searchResultsPage = Elements:FindFirstChild("SearchResultsPage")
 	if not searchResultsPage then
 		searchResultsPage = Elements.Template:Clone()
@@ -3832,9 +3833,9 @@ Main.Search.Input:GetPropertyChangedSignal('Text'):Connect(function()
 		if not Main:GetAttribute("PreSearchPage") and Elements.UIPageLayout.CurrentPage.Name ~= "SearchResultsPage" then
 			Main:SetAttribute("PreSearchPage", Elements.UIPageLayout.CurrentPage.Name)
 		end
-		
+
 		Elements.UIPageLayout:JumpTo(searchResultsPage)
-		
+
 		if not searchResultsPage:FindFirstChild('SearchTitle-fsefsefesfsefesfesfThanks') then
 			local searchTitle = Elements.Template.SectionTitle:Clone()
 			searchTitle.Parent = searchResultsPage
@@ -3843,7 +3844,7 @@ Main.Search.Input:GetPropertyChangedSignal('Text'):Connect(function()
 			searchTitle.Title.Text = "Search Results"
 			searchTitle.Visible = true
 		end
-		
+
 		for _, page in ipairs(Elements:GetChildren()) do
 			if page.ClassName == "ScrollingFrame" and page.Name ~= "Template" and page.Name ~= "SearchResultsPage" then
 				local i = 1
@@ -3853,7 +3854,7 @@ Main.Search.Input:GetPropertyChangedSignal('Text'):Connect(function()
 							element:SetAttribute("OriginalLayoutOrder", i)
 							element.LayoutOrder = i
 						end
-						
+
 						if not element:GetAttribute("OriginalParent") then
 							element:SetAttribute("OriginalParent", page.Name)
 						end
@@ -3872,13 +3873,13 @@ Main.Search.Input:GetPropertyChangedSignal('Text'):Connect(function()
 		if searchTitle then
 			searchTitle:Destroy()
 		end
-		
+
 		local preSearch = Main:GetAttribute("PreSearchPage")
 		if preSearch and Elements:FindFirstChild(preSearch) then
 			Elements.UIPageLayout:JumpTo(Elements:FindFirstChild(preSearch))
 		end
 		Main:SetAttribute("PreSearchPage", nil)
-		
+
 		for _, page in ipairs(Elements:GetChildren()) do
 			if page.ClassName == "ScrollingFrame" and page.Name ~= "Template" and page.Name ~= "SearchResultsPage" then
 				for _, element in ipairs(page:GetChildren()) do
